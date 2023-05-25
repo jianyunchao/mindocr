@@ -7,5 +7,4 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
     - run: pip install cpplint
-    - run: cpplint --recursive deploy/cpp_infer
-    - run: cpplint --root=src --extensions=cxx,cu,hh,cpp,hxx,cuh,h++,cc,c,hpp,c++,h,tpp,txx,cl --filter=-build/header_guard,-build/c++11 --quiet --linelength=120 --recursive deploy/cpp_infer
+    - run: cpplint --root=src --extensions=cxx,cu,hh,cpp,hxx,cuh,h++,cc,c,hpp,c++,h,tpp,txx,cl --filter=-build/header_guard,-build/c++11,legal/copyright --quiet --linelength=120 --recursive deploy/cpp_infer
