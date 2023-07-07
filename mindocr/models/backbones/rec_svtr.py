@@ -1,9 +1,10 @@
 from typing import Any, Callable, List, Optional, Tuple, Union
 
+import numpy as np
+
 import mindspore as ms
 import mindspore.nn as nn
 import mindspore.ops as ops
-import numpy as np
 from mindspore import Parameter, Tensor
 
 from ._registry import register_backbone, register_backbone_class
@@ -43,14 +44,6 @@ class ConvBNLayer(nn.Cell):
         out = self.norm(out)
         out = self.act(out)
         return out
-
-
-class Identity(nn.Cell):
-    def __init__(self) -> None:
-        super(Identity, self).__init__()
-
-    def construct(self, input: Tensor) -> Tensor:
-        return input
 
 
 class Mlp(nn.Cell):
@@ -225,7 +218,7 @@ class Block(nn.Cell):
         else:
             raise TypeError("The mixer must be one of [Global, Local, Conv]")
 
-        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else Identity()
+        self.drop_path = DropPath(drop_path) if drop_path > 0.0 else nn.Identity()
         if isinstance(norm_layer, str):
             self.norm2 = eval(norm_layer)([dim], epsilon=epsilon)
         else:
@@ -406,7 +399,7 @@ class SVTRNet(nn.Cell):
         mixer: List[str] = ["Local"] * 6 + ["Global"] * 6,  # Local, Global, Conv
         local_mixer: List[Tuple[int, int]] = [[7, 11], [7, 11], [7, 11]],
         patch_merging: str = "Conv",  # Conv, Pool, None
-        mlp_ratio: int = 4,
+        mlp_ratio: float = 4.0,
         qkv_bias: bool = True,
         qk_scale: Optional[float] = None,
         drop_rate: float = 0.0,
@@ -420,11 +413,44 @@ class SVTRNet(nn.Cell):
         block_unit: str = "Block",
         act: str = "nn.GELU",
         last_stage: bool = True,
+        extra_pool_at_last_stage: int = 1,
         sub_num: int = 2,
         prenorm: int = True,
         use_lenhead: bool = False,
         **kwargs: Any,
     ) -> None:
+        r"""SVTRNet Backbone, based on
+        `"SVTR: Scene Text Recognition with a Single Visual Model"
+        <https://arxiv.org/abs/2205.00159>`_.
+
+        Args:
+            img_size: Input image size. Default: [32, 100].
+            in_channels: Input channels. Default: 3.
+            embed_dim: Embedding dimesntion in each block. Default: [64, 128, 256].
+            depth: Number of layers in each SVTR block. Default: [3, 6, 3].
+            num_heads: Number of attention head in each SVTR block. Default: [2, 4, 8].
+            mixer: Type of the mixing block in each SVTR block. Default: ["Local"] * 6 + ["Global"] * 6
+            local_mixer: Window size in the local mixing block in each SVTR block. Default: [[7, 11], [7, 11], [7, 11]].
+            patch_merging: Patch merging method, can be "Conv", "Pool" or "None". Default: "Conv".
+            mlp_ratio: Ratio in the MLP hidden dimension. Default: 4.0.
+            qkv_bias: Where to have bias in attention layer. Default: True.
+            qk_scale: The scaling value in attention layer. If it is None, then no scaling is applied. Default: None.
+            drop_rate: Dropout Rate. Default: 0.0.
+            last_drop: Dropout Rate in the head, if head is applied. Default: 0.1.
+            attn_drop_rate: Dropout Rate in the attention layer. Default: 0.0.
+            drop_path_rate: Drop Path rata. Default: 0.1.
+            norm_layer: Type of the normalization layer. Default: nn.LayerNorm.
+            epsilon: Epsilon value in the normalization layer. Default: 1e-6.
+            out_channels: Number of the output channels. Default: 192.
+            block_unit: Type of the block. Support "Block" only. Default: Block.
+            act: Activation function in each block. Default: nn.GELU.
+            last_stage:: Apply the last layer. Default: True.
+            extra_pool_at_last_stage: Apply extra averaging pooling with the given window at the last layer. Default: 1.
+            sub_num: Patch coefficient in patch embedding. Default: 2.
+            prenorm: Apply normailzation after feature extraction. Default: True.
+            use_lenhead: Add extra head after the backbone for center loss. Default: False.
+            **kwargs: Dummy arguments for compatibility only.
+        """
         super().__init__()
         self.img_size = img_size
         self.embed_dim = embed_dim
@@ -553,6 +579,15 @@ class SVTRNet(nn.Cell):
             )
             self.hardswish = nn.HSwish()
             self.dropout = nn.Dropout(keep_prob=1 - last_drop)
+            if extra_pool_at_last_stage > 1:
+                self.pool = ops.AvgPool(
+                    kernel_size=(1, extra_pool_at_last_stage),
+                    strides=(1, extra_pool_at_last_stage),
+                    pad_mode="same",
+                )
+            else:
+                self.pool = nn.Identity()
+
         if not prenorm:
             self.norm = eval(norm_layer)([embed_dim[-1]], epsilon=epsilon)
         self.use_lenhead = use_lenhead
@@ -606,6 +641,7 @@ class SVTRNet(nn.Cell):
                 axis=2,
                 keep_dims=True,
             )
+            x = self.pool(x)
             x = self.last_conv(x)
             x = self.hardswish(x)
             x = self.dropout(x)
@@ -617,7 +653,13 @@ class SVTRNet(nn.Cell):
 
 
 @register_backbone
-def rec_svtr(pretrained: bool = False, **kwargs):
+def rec_svtr(pretrained: bool = False, **kwargs: Any) -> SVTRNet:
+    """Create the SVTR model.
+
+    Args:
+        pretrained: Use the pretrained weight
+        **kwargs: Parameters feed into the SVTRNet
+    """
     model = SVTRNet(**kwargs)
 
     # load pretrained weights

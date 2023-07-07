@@ -3,18 +3,17 @@ from abc import abstractmethod
 from ctypes import c_longdouble
 from multiprocessing import Manager
 
-from ..datatype import ModuleInitArgs, ProfilingData
 from ...utils import log
+from ..datatype import ModuleInitArgs, ProfilingData, StopData
 
 
 class ModuleBase(object):
     def __init__(self, args, msg_queue):
         self.args = args
-        self.pipeline_name = ''
-        self.module_name = ''
+        self.pipeline_name = ""
+        self.module_name = ""
         self.without_input_queue = False
         self.instance_id = 0
-        self.device_id = -1
         self.is_stop = False
         self.msg_queue = msg_queue
         self.input_queue = None
@@ -27,18 +26,25 @@ class ModuleBase(object):
         self.module_name = init_args.module_name
         self.instance_id = init_args.instance_id
 
-    def process_handler(self, stop_manager, input_queue, output_queue):
+    def process_handler(self, stop_manager, module_params, input_queue, output_queue):
         self.input_queue = input_queue
         self.output_queue = output_queue
         try:
-            self.init_self_args()
+            params = self.init_self_args()
+            if params:
+                module_params.update(**params)
         except Exception as error:
-            log.error(f'{self.__class__.__name__} init failed: {error}')
+            log.error(f"{self.__class__.__name__} init failed: {error}")
             raise error
 
-        while not self.msg_queue.full() and stop_manager.full():
+        # waiting for init sign
+        while not self.msg_queue.full():
             continue
-        time.sleep(0.5)
+
+        # waiting for the release of stop sign
+        while stop_manager.full():
+            continue
+
         while True:
             if stop_manager.full():
                 break
@@ -54,7 +60,11 @@ class ModuleBase(object):
             try:
                 self.process(send_data)
             except Exception as error:
-                log.exception(f'ERROR occurred in {self.module_name} module for {send_data.image_name}: {error}.')
+                self.process(StopData(exception=True))
+                log.exception(
+                    f"ERROR occurred in {self.module_name} module for {', '.join(send_data.image_path)}: {error}."
+                )
+
             cost_time = time.time() - start_time
             self.process_cost.value += cost_time
 
@@ -64,8 +74,8 @@ class ModuleBase(object):
 
     @abstractmethod
     def init_self_args(self):
-        self.msg_queue.put(f'{self.__class__.__name__} instance id {self.instance_id} init complete')
-        log.info(f'{self.__class__.__name__} instance id {self.instance_id} init complete')
+        self.msg_queue.put(f"{self.__class__.__name__} instance id {self.instance_id} init complete")
+        log.info(f"{self.__class__.__name__} instance id {self.instance_id} init complete")
 
     def send_to_next_module(self, output_data):
         if self.is_stop:
@@ -82,8 +92,11 @@ class ModuleBase(object):
         return self.instance_id
 
     def stop(self):
-        profiling_data = ProfilingData(module_name=self.module_name, instance_id=self.instance_id,
-                                       device_id=self.device_id, process_cost_time=self.process_cost.value,
-                                       send_cost_time=self.send_cost.value)
+        profiling_data = ProfilingData(
+            module_name=self.module_name,
+            instance_id=self.instance_id,
+            process_cost_time=self.process_cost.value,
+            send_cost_time=self.send_cost.value,
+        )
         self.msg_queue.put(profiling_data, block=False)
         self.is_stop = True

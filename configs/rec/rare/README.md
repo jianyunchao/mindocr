@@ -35,12 +35,12 @@ According to our experiments, the evaluation results on public benchmark dataset
 
 <div align="center">
 
-| **Model** | **Context**    | **Backbone** | **Transform Module** | **Avg Accuracy** | **Train T.** | **FPS** | **Recipe** | **Download** | 
+| **Model** | **Context**    | **Backbone** | **Transform Module** | **Avg Accuracy** | **Train T.** | **FPS** | **Recipe** | **Download** |
 | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :--------: |:-----: |
-| RARE     | D910x4-MS1.10-G | ResNet34_vd | None | 85.19%    | 3166 s/epoch         | 4561 | [yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/rare/rare_resnet34.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34-309dc63e.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34-309dc63e-b65dd225.mindir) |
+| RARE     | D910x4-MS1.10-G | ResNet34_vd | None | 85.19%    | 3166 s/epoch         | 4561 | [yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/rare/rare_resnet34.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34-309dc63e.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34_ascend-309dc63e-b96c2a4b.mindir) |
 </div>
 
-<details open>
+<details open markdown>
   <div align="center">
   <summary>Detailed accuracy results for each benchmark dataset</summary>
 
@@ -52,10 +52,10 @@ According to our experiments, the evaluation results on public benchmark dataset
 
 **Notes:**
 - Context: Training context denoted as {device}x{pieces}-{MS mode}, where mindspore mode can be G-graph mode or F-pynative mode with ms function. For example, D910x4-MS1.10-G is for training on 4 pieces of Ascend 910 NPU using graph mode based on Minspore version 1.10.
-- To reproduce the result on other contexts, please ensure the global batch size is the same. 
+- To reproduce the result on other contexts, please ensure the global batch size is the same.
 - The characters supported by model are lowercase English characters from a to z and numbers from 0 to 9. More explanation on dictionary, please refer to [4. Character Dictionary](#4-character-dictionary).
 - The models are trained from scratch without any pre-training. For more dataset details of training and evaluation, please refer to [Dataset Download & Dataset Usage](#312-dataset-download) section.
-
+- The input Shapes of MindIR of RARE is (1, 3, 32, 100) and it is for Ascend only.
 
 ## 3. Quick Start
 ### 3.1 Preparation
@@ -73,7 +73,7 @@ Please download lmdb dataset for traininig and evaluation from  [here](https://w
 - `evaluation.zip`: same as the evaluation/ within data_lmdb_release.zip
 
 
-Unzip the `data_lmdb_release.zip`, the data structure should be like 
+Unzip the `data_lmdb_release.zip`, the data structure should be like
 
 ``` text
 data_lmdb_release/
@@ -122,7 +122,7 @@ Here we used the datasets under `training/` folders for training, and the union 
 - [SynthText (ST)](http://www.robots.ox.ac.uk/~vgg/data/scenetext/)
   - Train: 16.0 GB, 5522808 samples
 
-**Validation:** 
+**Validation:**
 - Valid: 138 MB, 6992 samples
 
 **Evaluation:** (total 12,067 samples)
@@ -161,12 +161,12 @@ eval:
 
 **Data configuration for model evaluation**
 
-We use the dataset under `evaluation/` as the benchmark dataset. On **each individual dataset** (e.g. CUTE80, IC03_860, etc.), we perform a full evaluation by setting the dataset's directory to the evaluation dataset. This way, we get a list of the corresponding accuracies for each dataset, and then the reported accuracies are the average of these values. 
+We use the dataset under `evaluation/` as the benchmark dataset. On **each individual dataset** (e.g. CUTE80, IC03_860, etc.), we perform a full evaluation by setting the dataset's directory to the evaluation dataset. This way, we get a list of the corresponding accuracies for each dataset, and then the reported accuracies are the average of these values.
 
 To reproduce the reported evaluation results, you can:
 - Option 1: Repeat the evaluation step for all individual datasets: CUTE80, IC03_860, IC03_867, IC13_857, IC131015, IC15_1811, IC15_2077, IIIT5k_3000, SVT, SVTP. Then take the average score.
 
-- Option 2: Put all the benchmark datasets folder under the same directory, e.g. `evaluation/`. And use the script `tools/benchmarking/multi_dataset_eval.py`. 
+- Option 2: Put all the benchmark datasets folder under the same directory, e.g. `evaluation/`. And use the script `tools/benchmarking/multi_dataset_eval.py`.
 
 1. Evaluate on one specific dataset
 
@@ -185,12 +185,12 @@ eval:
   ...
 ```
 
-By running `tools/eval.py` as noted in section [Model Evaluation](#33-model-evaluation) with the above config yaml, you can get the accuracy performance on dataset CUTE80. 
+By running `tools/eval.py` as noted in section [Model Evaluation](#33-model-evaluation) with the above config yaml, you can get the accuracy performance on dataset CUTE80.
 
 
 2. Evaluate on multiple datasets under the same folder
 
-Assume you have put all benckmark datasets under evaluation/ as shown below: 
+Assume you have put all benckmark datasets under evaluation/ as shown below:
 
 ``` text
 data_lmdb_release/
@@ -226,7 +226,7 @@ eval:
 ```
 
 #### 3.1.4 Check YAML Config Files
-Apart from the dataset setting, please also check the following important args: `system.distribute`, `system.val_while_train`, `common.batch_size`, `train.ckpt_save_dir`, `train.dataset.dataset_root`, `train.dataset.data_dir`, `train.dataset.label_file`, 
+Apart from the dataset setting, please also check the following important args: `system.distribute`, `system.val_while_train`, `common.batch_size`, `train.ckpt_save_dir`, `train.dataset.dataset_root`, `train.dataset.data_dir`, `train.dataset.label_file`,
 `eval.ckpt_load_path`, `eval.dataset.dataset_root`, `eval.dataset.data_dir`, `eval.dataset.label_file`, `eval.loader.batch_size`. Explanations of these important args:
 
 ```yaml
@@ -288,7 +288,7 @@ If you want to train or finetune the model on a smaller dataset without distribu
 python tools/train.py --config configs/rec/rare/rare_resnet34.yaml
 ```
 
-The training result (including checkpoints, per-epoch performance and curves) will be saved in the directory parsed by the arg `ckpt_save_dir`. The default directory is `./tmp_rec`. 
+The training result (including checkpoints, per-epoch performance and curves) will be saved in the directory parsed by the arg `ckpt_save_dir`. The default directory is `./tmp_rec`.
 
 ### 3.3 Model Evaluation
 
@@ -302,7 +302,7 @@ python tools/eval.py --config configs/rec/rare/rare_resnet34.yaml
 
 ### Default Setting
 
-To transform the groud-truth text into label ids, we have to provide the character dictionary where keys are characters and values ​​are IDs. By default, the dictionary is **"0123456789abcdefghijklmnopqrstuvwxyz"**, which means id=0 will correspond to the charater "0". In this case, the dictionary only considers numbers and lowercase English characters, excluding spaces. 
+To transform the groud-truth text into label ids, we have to provide the character dictionary where keys are characters and values ​​are IDs. By default, the dictionary is **"0123456789abcdefghijklmnopqrstuvwxyz"**, which means id=0 will correspond to the charater "0". In this case, the dictionary only considers numbers and lowercase English characters, excluding spaces.
 
 ### Built-in Dictionaries
 
@@ -333,7 +333,7 @@ Currently, this model supports multilingual recognition and provides pre-trained
 
 We use a public Chinese text benchmark dataset [Benchmarking-Chinese-Text-Recognition](https://github.com/FudanVI/benchmarking-chinese-text-recognition) for RARE training and evaluation.
 
-For detailed instruction of data preparation and yaml configuration, please refer to [ch_dataeset](../../../docs/en/datasets/chinese_text_recognition.md).
+For detailed instruction of data preparation and yaml configuration, please refer to [ch_dataset](../../../docs/en/datasets/chinese_text_recognition.md).
 
 ### Training
 
@@ -348,13 +348,59 @@ mpirun --allow-run-as-root -n 8 python tools/train.py --config configs/rec/rare/
 After training, evaluation results on the benchmark test set are as follows, where we also provide the model config and pretrained weights.
 <div align="center">
 
-| **Model** | **Language** | **Backbone** | **Transform Module** | **Scene** | **Web** | **Document** | **Train T.** | **FPS** | **Recipe** | **Download** | 
+| **Model** | **Language** | **Backbone** | **Transform Module** | **Scene** | **Web** | **Document** | **Train T.** | **FPS** | **Recipe** | **Download** |
 | :-----: | :-----:  | :--------: | :------------: | :--------: | :--------: | :--------: | :--------: | :--------: |:---------: | :-----------: |
-| RARE    | Chinese | ResNet34_vd | None | 55.39% | 61.90% | 97.05% | 683 s/epoch | 1493 |  [rare_resnet34_ch.yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/rare/rare_resnet34_ch.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34_ch-780b6d20.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34_ch-780b6d20-017aec13.mindir) |
+| RARE    | Chinese | ResNet34_vd | None | 62.15% | 67.05% | 97.60% | 414 s/epoch | 2160 |  [rare_resnet34_ch.yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/rare/rare_resnet34_ch.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34_ch-5f3023e2.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/rare/rare_resnet34_ch_ascend-5f3023e2-11f0d554.mindir) |
 </div>
+
+- The input Shapes of MindIR of RARE is (1, 3, 32, 320) and it is for Ascend only.
 
 ### Training with Custom Datasets
 You can train models for different languages with your own custom datasets. Loading the pretrained Chinese model to finetune on your own dataset usually yields better results than training from scratch. Please refer to the tutorial [Training Recognition Network with Custom Datasets](../../../docs/en/tutorials/training_recognition_custom_dataset.md).
+
+
+## 6. MindSpore Lite Inference
+
+To inference with MindSpot Lite on Ascend 310, please refer to the tutorial [MindOCR Inference](../../../docs/en/inference/inference_tutorial.md). In short, the whole process consists of the following steps:
+
+**1. Model Export**
+
+Please [download](#2-results) the exported MindIR file first, or refer to the [Model Export](../../README.md) tutorial and use the following command to export the trained ckpt model to  MindIR file:
+
+```shell
+python tools/export.py --model_name rare_resnet34 --data_shape 32 100 --local_ckpt_path /path/to/local_ckpt.ckpt
+# or
+python tools/export.py --model_name configs/rec/rare/rare_resnet34 --data_shape 32 100 --local_ckpt_path /path/to/local_ckpt.ckpt
+```
+
+The `data_shape` is the model input shape of height and width for MindIR file. The shape value of MindIR in the download link can be found in [Notes](#2-results) under results table.
+
+
+**2. Environment Installation**
+
+Please refer to [Environment Installation](../../../docs/en/inference/environment.md#2-mindspore-lite-inference) tutorial to configure the MindSpore Lite inference environment.
+
+**3. Model Conversion**
+
+Please refer to [Model Conversion](../../../docs/en/inference/convert_tutorial.md#1-mindocr-models),
+and use the `converter_lite` tool for offline conversion of the MindIR file, where the `input_shape` in `configFile` needs to be filled in with the value from MindIR export,
+as mentioned above (1, 3, 32, 100), and the format is NCHW.
+
+**4. Inference**
+
+Assuming that you obtain output.mindir after model conversion, go to the `deploy/py_infer` directory, and use the following command for inference:
+
+```shell
+python infer.py \
+    --input_images_dir=/your_path_to/test_images \
+    --device=Ascend \
+    --device_id=0 \
+    --rec_model_path=your_path_to/output.mindir \
+    --rec_model_name_or_config=../../configs/rec/rare/rare_resnet34.yaml \
+    --backend=lite \
+    --res_save_dir=results_dir
+```
+
 
 ## References
 <!--- Guideline: Citation format GB/T 7714 is suggested. -->

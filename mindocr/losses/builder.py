@@ -1,10 +1,22 @@
-import inspect
-from .det_loss import L1BalancedCELoss, PSEDiceLoss
-from .rec_loss import CTCLoss, AttentionLoss
+__all__ = ["build_loss"]
 
-__all__ = ['build_loss']
+supported_losses = [
+    "DBLoss",
+    "CTCLoss",
+    "AttentionLoss",
+    "PSEDiceLoss",
+    "EASTLoss",
+    "CrossEntropySmooth",
+    "ABINetLoss",
+    "FCELoss",
+    "SARLoss",
+    "VisionLANLoss",
+]
 
-supported_losses = ['L1BalancedCELoss', 'CTCLoss', 'AttentionLoss', 'PSEDiceLoss']
+from .abinet_loss import ABINetLoss
+from .cls_loss import CrossEntropySmooth
+from .det_loss import DBLoss, EASTLoss, FCELoss, PSEDiceLoss
+from .rec_loss import AttentionLoss, CTCLoss, SARLoss, VisionLANLoss
 
 
 def build_loss(name, **kwargs):
@@ -13,10 +25,10 @@ def build_loss(name, **kwargs):
 
     Args:
         name (str): loss function name, exactly the same as one of the supported loss class names
-    
+
     Return:
         nn.LossBase
-    
+
     Example:
         >>> # Create a CTC Loss module
         >>> from mindocr.losses import build_loss
@@ -26,7 +38,7 @@ def build_loss(name, **kwargs):
         >>> loss_fn
         CTCLoss<>
     """
-    assert name in supported_losses, f'Invalid loss name {name}, support losses are {supported_losses}'
+    assert name in supported_losses, f"Invalid loss name {name}, support losses are {supported_losses}"
 
     loss_fn = eval(name)(**kwargs)
 

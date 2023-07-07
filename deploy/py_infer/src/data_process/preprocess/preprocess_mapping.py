@@ -1,14 +1,19 @@
-from ..preprocess import transforms
+from . import transforms
 
-PREPROCESS_SKIP_OPS = ["DetLabelEncode", "RecCTCLabelEncode", "CTCLabelEncode"]
-
+# other ops node will be skipped
 PREPROCESS_MAPPING_OPS = {
+    # general
     "DecodeImage": transforms.DecodeImage,
     "NormalizeImage": transforms.NormalizeImage,
     "ToCHWImage": transforms.ToCHWImage,
-    "GridResize": transforms.ResizeImage,
-    "ResizeImage": transforms.ResizeImage,
-    "ScalePadImage": transforms.ScalePadImage,
-    "RecResizeImg": transforms.RecResizeImg,
-    "ClsResizeImg": transforms.ClsResizeImg
+    # det
+    "DetResize": transforms.DetResize,
+    "DetResizeNormForInfer": transforms.DetResizeNormForInfer,
+    # rec
+    "SVTRRecResizeImg": transforms.SVTRRecResizeImg,
+    "RecResizeNormForInfer": transforms.RecResizeNormForInfer,
+    "RecResizeNormForViTSTR": transforms.RecResizeNormForViTSTR,
+    "RecResizeNormForMMOCR": transforms.RecResizeNormForMMOCR,
+    # cls
+    "ClsResizeNormForInfer": transforms.ClsResizeNormForInfer,
 }

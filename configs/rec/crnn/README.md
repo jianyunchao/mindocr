@@ -33,49 +33,46 @@ Table Format:
 - Download: url of the pretrained model weights. Use absolute url path.
 -->
 
-### Accuracy
+### Training Perf.
 
-According to our experiments, the evaluation results on public benchmark datasets (IC03, IC13, IC15, IIIT, SVT, SVTP, CUTE) is as follow:
+According to our experiments, the training (following the steps in [Model Training](#32-model-training)) performance and evaluation (following the steps in [Model Evaluation](#33-model-evaluation)) accuracy are as follows:
 
 <div align="center">
 
-| **Model** | **Context**    | **Backbone** | **Avg Accuracy** | **Train T.** | **Recipe** | **Download** | 
-| :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: |
-| CRNN      | D910x8-MS1.8-G | VGG7 | 82.03%    | 2445 s/epoch          | [yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/crnn/crnn_vgg7.yaml)     | [ckpt](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_vgg7-ea7e996c.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_vgg7-ea7e996c-3a19e349.mindir)   |
-| CRNN      | D910x8-MS1.8-G | ResNet34_vd | 84.45%    | 2118 s/epoch         | [yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/crnn/crnn_resnet34.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34-83f37f07.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34-83f37f07-2f016384.mindir) |
+| **Model** | **Context**  | **Backbone** | **Train Dataset** | **Model Params** | **Batch size per card** | **Graph train 8P (s/epoch)** | **Graph train 8P (ms/step)** | **Graph train 8P (FPS)** | **Avg Eval Accuracy** | **Recipe** | **Download** |
+| :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: | :-----: |
+| CRNN      | D910x8-MS1.8-G | VGG7 | MJ+ST | 8.72 M | 16 |  2488.82 | 22.06 | 5802.71 | 82.03%  | [yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/crnn/crnn_vgg7.yaml)  | [ckpt](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_vgg7-ea7e996c.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_vgg7-ea7e996c-573dbd61.mindir)   |
+| CRNN      | D910x8-MS1.8-G | ResNet34_vd | MJ+ST | 24.48 M | 64 |  2157.18 | 76.48 | 6694.84 | 84.45% | [yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/crnn/crnn_resnet34.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34-83f37f07.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34-83f37f07-eb10a0c9.mindir) |
 </div>
 
-<details open>
+- Detailed accuracy results for each benchmark dataset (IC03, IC13, IC15, IIIT, SVT, SVTP, CUTE):
   <div align="center">
-  <summary>Detailed accuracy results for each benchmark dataset</summary>
 
   | **Model** | **Backbone** | **IC03_860** | **IC03_867** | **IC13_857** | **IC13_1015** | **IC15_1811** | **IC15_2077** | **IIIT5k_3000** | **SVT** | **SVTP** | **CUTE80** | **Average** |
-  | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | 
+  | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: | :------: |
   | CRNN | VGG7 | 94.53% | 94.00% | 92.18% | 90.74% | 71.95% | 66.06% | 84.10% | 83.93% | 73.33% | 69.44% | 82.03% |
   | CRNN | ResNet34_vd | 94.42% | 94.23% | 93.35% | 92.02% | 75.92% | 70.15% | 87.73% | 86.40% | 76.28% | 73.96% | 84.45% |
   </div>
-</details>
 
-### Performance
+### Inference Perf.
 
-#### Training Perf.
+The inference performance is tested on Mindspore Lite, please take a look at [Mindpore Lite Inference](#6-mindspore-lite-inference) for more details.
 
-| Device | Model | Backbone | Dataset | Params | Batch size per card | Graph train 8P (s/epoch) | Graph train 8P (ms/step) | Graph train 8P (FPS) |
-| :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: |
-| Ascend910| CRNN | VGG7 | MJ+ST | 8.72 M | 16 | 2488.82 | 22.06 | 5802.71 |
-| Ascend910| CRNN | ResNet34_vd | MJ+ST | 24.48 M | 64 | 2157.18 | 76.48 | 6694.84 |
+<div align="center">
 
-#### Inference Perf.
 | Device | Env | Model | Backbone | Params | Test Dataset | Batch size | Graph infer 1P (FPS) |
-| :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: | 
+| :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: |
 | Ascend310P | Lite2.0 | CRNN | ResNet34_vd | 24.48 M | IC15 | 1 | 361.09 |
 | Ascend310P | Lite2.0 | CRNN | ResNet34_vd | 24.48 M | SVT | 1 | 274.67 |
 
+</div>
+
 **Notes:**
 - Context: Training context denoted as {device}x{pieces}-{MS mode}, where mindspore mode can be G-graph mode or F-pynative mode with ms function. For example, D910x8-MS1.8-G is for training on 8 pieces of Ascend 910 NPU using graph mode based on Minspore version 1.8.
-- To reproduce the result on other contexts, please ensure the global batch size is the same. 
+- To reproduce the result on other contexts, please ensure the global batch size is the same.
 - The characters supported by model are lowercase English characters from a to z and numbers from 0 to 9. More explanation on dictionary, please refer to [4. Character Dictionary](#4-character-dictionary).
 - The models are trained from scratch without any pre-training. For more dataset details of training and evaluation, please refer to [Dataset Download & Dataset Usage](#312-dataset-download) section.
+- The input Shapes of MindIR of CRNN_VGG7 and CRNN_ResNet34_vd are both (1, 3, 32, 100).
 
 
 ## 3. Quick Start
@@ -94,7 +91,7 @@ Please download lmdb dataset for traininig and evaluation from  [here](https://w
 - `evaluation.zip`: same as the evaluation/ within data_lmdb_release.zip
 
 
-Unzip the `data_lmdb_release.zip`, the data structure should be like 
+Unzip the `data_lmdb_release.zip`, the data structure should be like
 
 ``` text
 data_lmdb_release/
@@ -143,7 +140,7 @@ Here we used the datasets under `training/` folders for **training**, and the un
 - [SynthText (ST)](http://www.robots.ox.ac.uk/~vgg/data/scenetext/)
   - Train: 16.0 GB, 5522808 samples
 
-**Validation:** 
+**Validation:**
 - Valid: 138 MB, 6992 samples
 
 **Evaluation:** (total 12,067 samples)
@@ -184,12 +181,12 @@ eval:
 
 **Data configuration for model evaluation**
 
-We use the dataset under `evaluation/` as the benchmark dataset. On **each individual dataset** (e.g. CUTE80, IC03_860, etc.), we perform a full evaluation by setting the dataset's directory to the evaluation dataset. This way, we get a list of the corresponding accuracies for each dataset, and then the reported accuracies are the average of these values. 
+We use the dataset under `evaluation/` as the benchmark dataset. On **each individual dataset** (e.g. CUTE80, IC03_860, etc.), we perform a full evaluation by setting the dataset's directory to the evaluation dataset. This way, we get a list of the corresponding accuracies for each dataset, and then the reported accuracies are the average of these values.
 
 To reproduce the reported evaluation results, you can:
 - Option 1: Repeat the evaluation step for all individual datasets: CUTE80, IC03_860, IC03_867, IC13_857, IC131015, IC15_1811, IC15_2077, IIIT5k_3000, SVT, SVTP. Then take the average score.
 
-- Option 2: Put all the benchmark datasets folder under the same directory, e.g. `evaluation/`. And use the script `tools/benchmarking/multi_dataset_eval.py`. 
+- Option 2: Put all the benchmark datasets folder under the same directory, e.g. `evaluation/`. And use the script `tools/benchmarking/multi_dataset_eval.py`.
 
 1. Evaluate on one specific dataset
 
@@ -209,12 +206,12 @@ eval:
   ...
 ```
 
-By running `tools/eval.py` as noted in section [Model Evaluation](#33-model-evaluation) with the above config yaml, you can get the accuracy performance on dataset CUTE80. 
+By running `tools/eval.py` as noted in section [Model Evaluation](#33-model-evaluation) with the above config yaml, you can get the accuracy performance on dataset CUTE80.
 
 
 2. Evaluate on multiple datasets under the same folder
 
-Assume you have put all benckmark datasets under evaluation/ as shown below: 
+Assume you have put all benckmark datasets under evaluation/ as shown below:
 
 ``` text
 data_lmdb_release/
@@ -251,7 +248,7 @@ eval:
 ```
 
 #### 3.1.4 Check YAML Config Files
-Apart from the dataset setting, please also check the following important args: `system.distribute`, `system.val_while_train`, `common.batch_size`, `train.ckpt_save_dir`, `train.dataset.dataset_root`, `train.dataset.data_dir`, `train.dataset.label_file`, 
+Apart from the dataset setting, please also check the following important args: `system.distribute`, `system.val_while_train`, `common.batch_size`, `train.ckpt_save_dir`, `train.dataset.dataset_root`, `train.dataset.data_dir`, `train.dataset.label_file`,
 `eval.ckpt_load_path`, `eval.dataset.dataset_root`, `eval.dataset.data_dir`, `eval.dataset.label_file`, `eval.loader.batch_size`. Explanations of these important args:
 
 ```yaml
@@ -315,7 +312,7 @@ If you want to train or finetune the model on a smaller dataset without distribu
 python tools/train.py --config configs/rec/crnn/crnn_resnet34.yaml
 ```
 
-The training result (including checkpoints, per-epoch performance and curves) will be saved in the directory parsed by the arg `ckpt_save_dir`. The default directory is `./tmp_rec`. 
+The training result (including checkpoints, per-epoch performance and curves) will be saved in the directory parsed by the arg `ckpt_save_dir`. The default directory is `./tmp_rec`.
 
 ### 3.3 Model Evaluation
 
@@ -329,7 +326,7 @@ python tools/eval.py --config configs/rec/crnn/crnn_resnet34.yaml
 
 ### Default Setting
 
-To transform the groud-truth text into label ids, we have to provide the character dictionary where keys are characters and values ​​are IDs. By default, the dictionary is **"0123456789abcdefghijklmnopqrstuvwxyz"**, which means id=0 will correspond to the charater "0". In this case, the dictionary only considers numbers and lowercase English characters, excluding spaces. 
+To transform the groud-truth text into label ids, we have to provide the character dictionary where keys are characters and values ​​are IDs. By default, the dictionary is **"0123456789abcdefghijklmnopqrstuvwxyz"**, which means id=0 will correspond to the charater "0". In this case, the dictionary only considers numbers and lowercase English characters, excluding spaces.
 
 ### Built-in Dictionaries
 
@@ -367,7 +364,7 @@ For detailed instruction of data preparation and yaml configuration, please refe
 To train with the prepared datsets and config file, please run:
 
 ```shell
-mpirun --allow-run-as-root -n 8 python tools/train.py --config configs/rec/crnn/crnn_resnet34_ch.yaml
+mpirun --allow-run-as-root -n 4 python tools/train.py --config configs/rec/crnn/crnn_resnet34_ch.yaml
 ```
 
 ### Results and Pretrained Weights
@@ -376,13 +373,59 @@ After training, evaluation results on the benchmark test set are as follows, whe
 
 <div align="center">
 
-| **Model** | **Language** | **Backbone** | **Scene** | **Web** | **Document** | **Recipe** | **Download** | 
-| :-----: | :-----:  | :--------: | :--------: | :--------: | :--------: | :---------: | :-----------: |
-| CRNN    | Chinese | ResNet34_vd | 59.71% | 64.86% | 89.23% |  [crnn_resnet34_ch.yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/crnn/crnn_resnet34_ch.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34_ch-a8d0f5d3.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34_ch-a8d0f5d3-f27f763a.mindir) |
+| **Model** | **Language** | **Context**  |**Backbone** | **Scene** | **Web** | **Document** | **Train T.** | **FPS** | **Recipe** | **Download** |
+| :-----: | :-----:  | :--------: | :--------: | :--------: | :--------: | :--------: | :---------: | :--------: | :---------: | :-----------: |
+| CRNN    | Chinese | D910x4-MS1.10-G | ResNet34_vd | 60.45% | 65.95% | 97.68% | 647 s/epoch | 1180 | [crnn_resnet34_ch.yaml](https://github.com/mindspore-lab/mindocr/blob/main/configs/rec/crnn/crnn_resnet34_ch.yaml) | [ckpt](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34_ch-7a342e3c.ckpt) \| [mindir](https://download.mindspore.cn/toolkits/mindocr/crnn/crnn_resnet34_ch-7a342e3c-105bccb2.mindir) |
 </div>
+
+**Notes:**
+- The input shape for exported MindIR file in the download link is (1, 3, 32, 320).
 
 ### Training with Custom Datasets
 You can train models for different languages with your own custom datasets. Loading the pretrained Chinese model to finetune on your own dataset usually yields better results than training from scratch. Please refer to the tutorial [Training Recognition Network with Custom Datasets](../../../docs/en/tutorials/training_recognition_custom_dataset.md).
+
+
+## 6. MindSpore Lite Inference
+
+To inference with MindSpot Lite on Ascend 310, please refer to the tutorial [MindOCR Inference](../../../docs/en/inference/inference_tutorial.md). In short, the whole process consists of the following steps:
+
+**1. Model Export**
+
+Please [download](#2-results) the exported MindIR file first, or refer to the [Model Export](../../README.md) tutorial and use the following command to export the trained ckpt model to  MindIR file:
+
+```shell
+python tools/export.py --model_name crnn_resnet34 --data_shape 32 100 --local_ckpt_path /path/to/local_ckpt.ckpt
+# or
+python tools/export.py --model_name configs/rec/crnn/crnn_resnet34.yaml --data_shape 32 100 --local_ckpt_path /path/to/local_ckpt.ckpt
+```
+
+The `data_shape` is the model input shape of height and width for MindIR file. The shape value of MindIR in the download link can be found in [Notes](#2-results) under results table.
+
+
+**2. Environment Installation**
+
+Please refer to [Environment Installation](../../../docs/en/inference/environment.md#2-mindspore-lite-inference) tutorial to configure the MindSpore Lite inference environment.
+
+**3. Model Conversion**
+
+Please refer to [Model Conversion](../../../docs/en/inference/convert_tutorial.md#1-mindocr-models),
+and use the `converter_lite` tool for offline conversion of the MindIR file, where the `input_shape` in `configFile` needs to be filled in with the value from MindIR export,
+as mentioned above (1, 3, 32, 100), and the format is NCHW.
+
+**4. Inference**
+
+Assuming that you obtain output.mindir after model conversion, go to the `deploy/py_infer` directory, and use the following command for inference:
+
+```shell
+python infer.py \
+    --input_images_dir=/your_path_to/test_images \
+    --device=Ascend \
+    --device_id=0 \
+    --rec_model_path=your_path_to/output.mindir \
+    --rec_model_name_or_config=../../configs/rec/crnn/crnn_resnet34.yaml \
+    --backend=lite \
+    --res_save_dir=results_dir
+```
 
 
 ## References

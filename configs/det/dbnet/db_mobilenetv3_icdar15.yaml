@@ -32,7 +32,7 @@ model:
 
 postprocess:
   name: DBPostprocess
-  output_polygon: False   # whether to output a polygon or a box
+  box_type: quad   # whether to output a polygon or a box
   binary_thresh: 0.3      # binarization threshold
   box_thresh: 0.6         # box score threshold
   max_candidates: 1000
@@ -43,7 +43,7 @@ metric:
   main_indicator: f-score
 
 loss:
-  name: L1BalancedCELoss
+  name: DBLoss
   eps: 1.0e-6
   l1_scale: 10
   bce_scale: 5
@@ -86,9 +86,12 @@ train:
       - RandomColorAdjust:
           brightness: 0.1255  # 32.0 / 255
           saturation: 0.5
-      - IaaAugment:
-          Fliplr: { p: 0.5 }
-          Affine: { rotate: [ -10, 10 ], p: 1.0 }
+      - RandomHorizontalFlip:
+          p: 0.5
+      - RandomRotate:
+          degrees: [ -10, 10 ]
+          expand_canvas: False
+          p: 1.0
       - RandomScale:
           scale_range: [ 0.5, 3.0 ]
           p: 1.0
@@ -112,7 +115,7 @@ train:
           std: imagenet
       - ToCHWImage:
     #  the order of the dataloader list, matching the network input and the input labels for the loss function, and optional data for debug/visualize
-    output_columns: [ 'image', 'binary_map', 'mask', 'thresh_map', 'thresh_mask' ] #'img_path']
+    output_columns: [ 'image', 'binary_map', 'mask', 'thresh_map', 'thresh_mask']
 #    output_columns: ['image'] # for debug op performance
     net_input_column_index: [0] # input indices for network forward func in output_columns
     label_column_index: [1, 2, 3, 4] # input indices marked as label
@@ -137,12 +140,11 @@ eval:
           img_mode: RGB
           to_float32: False
       - DetLabelEncode:
-      - GridResize:
-          factor: 32
-      # GridResize already sets the evaluation size to [ 736, 1280 ].
-      # Uncomment ScalePadImage block for other resolutions.
-#      - ScalePadImage:
-#          target_size: [ 736, 1280 ] # h, w
+      - DetResize:  # GridResize 32
+          target_size: [ 736, 1280 ]
+          keep_ratio: False
+          limit_type: None
+          divisor: 32
       - NormalizeImage:
           bgr_to_rgb: False
           is_hwc: True
@@ -150,7 +152,7 @@ eval:
           std: imagenet
       - ToCHWImage:
     #  the order of the dataloader list, matching the network input and the labels for evaluation
-    output_columns: [ 'image', 'polys', 'ignore_tags' ]
+    output_columns: [ 'image', 'polys', 'ignore_tags', 'shape_list' ]
     net_input_column_index: [0] # input indices for network forward func in output_columns
     label_column_index: [1, 2] # input indices marked as label
 

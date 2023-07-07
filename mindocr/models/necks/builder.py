@@ -1,28 +1,27 @@
-from .fpn import FPN, DBFPN, PSEFPN
+__all__ = ['build_neck']
+supported_necks = ['FPN', 'DBFPN', 'RNNEncoder', 'Select', 'Img2Seq', 'PSEFPN', 'EASTFPN', 'FCEFPN', 'MasterEncoder']
+from .fpn import DBFPN, EASTFPN, FCEFPN, FPN, PSEFPN
+from .img2seq import Img2Seq
+from .master_encoder import MasterEncoder
 from .rnn import RNNEncoder
 from .select import Select
-from .img2seq import Img2Seq
-
-
-__all__ = ['build_neck']
-supported_necks = ['FPN', 'DBFPN', 'RNNEncoder', 'Select', 'Img2Seq', 'PSEFPN']
 
 
 def build_neck(neck_name, **kwargs):
     """
     Build Neck network.
-    
+
     Args:
         neck_name (str): the neck name, which shoule be one of the supported_necks.
         kwargs (dict): input args for the neck network
-        
+
     Return:
         nn.Cell for neck module
-        
+
     Construct:
         Input: Tensor
         Output: Dict[Tensor]
-        
+
     Example:
         >>> # build RNNEncoder
         >>> from mindocr.models.necks import build_neck

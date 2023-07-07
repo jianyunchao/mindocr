@@ -1,5 +1,5 @@
-from ...framework import ModuleBase
 from ....infer import TextRecognizer
+from ...framework import ModuleBase
 
 
 class RecInferNode(ModuleBase):
@@ -9,7 +9,7 @@ class RecInferNode(ModuleBase):
 
     def init_self_args(self):
         self.text_recognizer = TextRecognizer(self.args)
-        self.text_recognizer.init(warmup=True)
+        self.text_recognizer.init(preprocess=False, model=True, postprocess=False)
 
         super().init_self_args()
 
@@ -18,11 +18,10 @@ class RecInferNode(ModuleBase):
             self.send_to_next_module(input_data)
             return
 
-        input = input_data.input
+        data = input_data.data
 
-        output = self.text_recognizer.model_infer(input["image"])
+        pred = self.text_recognizer.model_infer(data)
 
-        input_data.output = output
-        input_data.input = None
+        input_data.data = {"pred": pred}
 
         self.send_to_next_module(input_data)

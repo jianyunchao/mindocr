@@ -1,18 +1,33 @@
-from typing import Tuple, List
+from typing import List, Type, Union
+
 from mindspore import Tensor
-from .mindcv_models.resnet import ResNet, BasicBlock, Bottleneck, default_cfgs
-from .mindcv_models.utils import load_pretrained
+
 from ._registry import register_backbone, register_backbone_class
+from .mindcv_models.resnet import BasicBlock, Bottleneck, ResNet, default_cfgs
+from .mindcv_models.utils import load_pretrained
 
 __all__ = ['DetResNet', 'det_resnet50', 'det_resnet18', 'det_resnet152']
 
 
 @register_backbone_class
 class DetResNet(ResNet):
-    def __init__(self, block, layers, **kwargs):
+    """
+    A wrapper of the original ResNet described in
+    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/abs/1512.03385>`_ that extracts features
+    from stages 1 to 5 (4 features maps at different scales).
+
+    Args:
+        block: ResNet's building block.
+        layers: number of layers in each stage.
+        **kwargs: please check the parent class (ResNet) for information.
+
+    Examples:
+        Initializing ResNet-50 for feature extraction:
+        >>> model = DetResNet(Bottleneck, [3, 4, 6, 3])
+    """
+    def __init__(self, block: Type[Union[BasicBlock, Bottleneck]], layers: List[int], **kwargs):
         super().__init__(block, layers, **kwargs)
         del self.pool, self.classifier  # remove the original header to avoid confusion
-        # self.out_indices = out_indices
         self.out_channels = [ch * block.expansion for ch in [64, 128, 256, 512]]
 
     def construct(self, x: Tensor) -> List[Tensor]:
@@ -40,10 +55,19 @@ class DetResNet(ResNet):
 
 
 @register_backbone
-def det_resnet18(pretrained: bool = True, **kwargs):
+def det_resnet18(pretrained: bool = True, **kwargs) -> DetResNet:
+    """
+    A predefined ResNet-18 for Text Detection.
+
+    Args:
+        pretrained: whether to load weights pretrained on ImageNet. Default: True.
+        **kwargs: additional parameters to pass to ResNet.
+
+    Returns:
+        DetResNet: ResNet model.
+    """
     model = DetResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
 
-    # load pretrained weights
     if pretrained:
         default_cfg = default_cfgs['resnet18']
         load_pretrained(model, default_cfg)
@@ -52,10 +76,19 @@ def det_resnet18(pretrained: bool = True, **kwargs):
 
 
 @register_backbone
-def det_resnet50(pretrained: bool = True, **kwargs):
+def det_resnet50(pretrained: bool = True, **kwargs) -> DetResNet:
+    """
+    A predefined ResNet-50 for Text Detection.
+
+    Args:
+        pretrained: whether to load weights pretrained on ImageNet. Default: True.
+        **kwargs: additional parameters to pass to ResNet.
+
+    Returns:
+        DetResNet: ResNet model.
+    """
     model = DetResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
 
-    # load pretrained weights
     if pretrained:
         default_cfg = default_cfgs['resnet50']
         load_pretrained(model, default_cfg)
@@ -64,9 +97,19 @@ def det_resnet50(pretrained: bool = True, **kwargs):
 
 
 @register_backbone
-def det_resnet152(pretrained: bool = True, **kwargs):
+def det_resnet152(pretrained: bool = True, **kwargs) -> DetResNet:
+    """
+    A predefined ResNet-152 for Text Detection.
+
+    Args:
+        pretrained: whether to load weights pretrained on ImageNet. Default: True.
+        **kwargs: additional parameters to pass to ResNet.
+
+    Returns:
+        DetResNet: ResNet model.
+    """
     model = DetResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
-    # load pretrained weights
+
     if pretrained:
         default_cfg = default_cfgs['resnet152']
         load_pretrained(model, default_cfg)

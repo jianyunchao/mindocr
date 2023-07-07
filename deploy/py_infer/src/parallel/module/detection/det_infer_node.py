@@ -1,5 +1,5 @@
-from ...framework import ModuleBase
 from ....infer import TextDetector
+from ...framework import ModuleBase
 
 
 class DetInferNode(ModuleBase):
@@ -9,7 +9,7 @@ class DetInferNode(ModuleBase):
 
     def init_self_args(self):
         self.text_detector = TextDetector(self.args)
-        self.text_detector.init(warmup=True)
+        self.text_detector.init(preprocess=False, model=True, postprocess=False)
         super().init_self_args()
 
     def process(self, input_data):
@@ -17,10 +17,9 @@ class DetInferNode(ModuleBase):
             self.send_to_next_module(input_data)
             return
 
-        input = input_data.input
-        pred = self.text_detector.model_infer(input["image"])
+        data = input_data.data
+        pred = self.text_detector.model_infer(data)
 
-        input_data.output = {"pred": pred, "shape": input["shape"]}
-        input_data.input = None
+        input_data.data = {"pred": pred, "shape_list": data["shape_list"]}
 
         self.send_to_next_module(input_data)

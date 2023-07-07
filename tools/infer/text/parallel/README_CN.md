@@ -74,7 +74,7 @@
    运行以下命令，开始串联推理。**以下传入的参数值将覆盖yaml文件中的对应参数值。**
 
    ```bash
-   python tools/predict/text/parallel/predict_system.py \
+   python tools/infer/text/parallel/predict_system.py \
                 --raw_data_dir path/to/raw_data \
                 --det_ckpt_path path/to/detection_ckpt \
                 --rec_ckpt_path path/to/recognition_ckpt
@@ -88,7 +88,7 @@
    img_2.jpg	[{"transcription": "apple", "points": [553, 338, 706, 318, 709, 342, 556, 362]}, ...]
    ...
    ```
-   
+
    准备好串联推理图片的**ground truth文件**（格式与上述推理结果文件一致）和**推理结果文件**后，执行以下命令，开始对串联推理进行精度评估。
    ```bash
    cd deploy/eval_utils
